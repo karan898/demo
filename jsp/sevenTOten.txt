@@ -1,0 +1,441 @@
+//PRACTICAL 7 – JSP User Authentication (JDBC)
+
+
+Practical_7
+│── WebContent
+│ ├── Login.jsp
+│ ├── authenticate.jsp
+│
+│── lib
+│ └── mysql-connector-j.jar
+
+
+// Database Setup
+
+CREATE DATABASE jsp_db;
+
+USE jsp_db;
+
+CREATE TABLE users (
+id INT AUTO_INCREMENT PRIMARY KEY,
+username VARCHAR(50),
+password VARCHAR(50)
+);
+
+INSERT INTO users (username, password)
+VALUES ('admin', '123');
+
+
+1. Login.jsp (User Input Page)
+
+<%@ page language="java" %>
+<html>
+<head>
+<title>User Login</title>
+</head>
+<body>
+
+<h2>User Authentication - JSP</h2>
+
+<form action="authenticate.jsp" method="post">
+Username: <input type="text" name="username"><br><br>
+Password: <input type="password" name="password"><br><br>
+<input type="submit" value="Login">
+</form>
+
+</body>
+</html>
+
+
+// 2. authenticate.jsp (JDBC Logic)
+
+<%@ page import="java.sql.*" %>
+<%
+String user = request.getParameter("username");
+String pass = request.getParameter("password");
+
+boolean valid = false;
+
+try {
+// Load Driver
+Class.forName("com.mysql.cj.jdbc.Driver");
+
+// Connection
+Connection con = DriverManager.getConnection(
+"jdbc:mysql://localhost:3306/jsp_db", "root", ""
+);
+
+// Query
+PreparedStatement ps = con.prepareStatement(
+"SELECT * FROM users WHERE username=? AND password=?"
+);
+
+ps.setString(1, user);
+ps.setString(2, pass);
+
+ResultSet rs = ps.executeQuery();
+
+if (rs.next()) {
+valid = true;
+}
+
+rs.close();
+ps.close();
+con.close();
+
+} catch (Exception e) {
+out.println("Error: " + e);
+}
+
+// Output
+if (valid) {
+%>
+<h2 style="color:green">Login Successful</h2>
+<h3>Welcome, <%= user %></h3>
+<%
+} else {
+%>
+<h2 style="color:red">Invalid Username or Password</h2>
+<%
+}
+%>
+
+
+// PRACTICAL 8 – JSP JavaBeans (Bank Operations)
+
+
+Practical_8/
+│── src/
+│ └── bean/
+│ └── AccountBean.java
+│
+│── WebContent/
+│ └── account.jsp
+
+
+// 1. AccountBean.java (Business Logic)
+
+package bean;
+
+import java.io.Serializable;
+
+public class AccountBean implements Serializable {
+
+private int accountNo;
+private String name;
+private double balance;
+
+// Default Constructor
+public AccountBean() {
+balance = 0.0;
+}
+
+// Getters & Setters
+public int getAccountNo() {
+return accountNo;
+}
+
+public void setAccountNo(int accountNo) {
+this.accountNo = accountNo;
+}
+
+public String getName() {
+return name;
+}
+
+public void setName(String name) {
+this.name = name;
+}
+
+public double getBalance() {
+return balance;
+}
+
+// Business Methods
+public void deposit(double amount) {
+balance += amount;
+}
+
+public boolean withdraw(double amount) {
+if (amount <= balance) {
+balance -= amount;
+return true;
+}
+return false;
+}
+}
+
+
+
+───
+
+ 2. account.jsp (UI + Logic Integration)
+
+<%@ page import="bean.AccountBean" %>
+
+<jsp:useBean id="acc" class="bean.AccountBean" scope="session" />
+
+<html>
+<head>
+<title>Bank Account</title>
+</head>
+<body>
+
+<h2>Bank Account Operations</h2>
+
+<form method="post">
+Account No: <input type="text" name="ano"><br><br>
+Name: <input type="text" name="name"><br><br>
+Amount: <input type="text" name="amount"><br><br>
+
+<input type="submit" name="action" value="Deposit">
+<input type="submit" name="action" value="Withdraw">
+</form>
+
+<%
+String action = request.getParameter("action");
+
+if (action != null) {
+
+int ano = Integer.parseInt(request.getParameter("ano"));
+String name = request.getParameter("name");
+double amount = Double.parseDouble(request.getParameter("amount"));
+
+acc.setAccountNo(ano);
+acc.setName(name);
+
+if (action.equals("Deposit")) {
+acc.deposit(amount);
+} else if (action.equals("Withdraw")) {
+boolean success = acc.withdraw(amount);
+
+if (!success) {
+out.println("<p style='color:red'>Insufficient Balance</p>");
+}
+}
+}
+%>
+
+<h3>Account Information</h3>
+Account No: <%= acc.getAccountNo() %><br>
+Name: <%= acc.getName() %><br>
+Balance: <%= acc.getBalance() %><br>
+
+</body>
+</html>
+───
+
+ PRACTICAL 9 – JSP Custom Tag (Sorting Numbers)
+
+
+
+───
+
+Project Structure
+
+Practical_9/
+│── WebContent/
+│ ├── index.jsp
+│ └── WEB-INF/
+│ ├── web.xml
+│ └── tags/
+│ └── sort.tag
+
+ Matches your file (custom tag inside /WEB-INF/tags)
+
+
+
+───
+
+ 1. sort.tag (Custom Tag Logic)
+
+<%@ tag body-content="empty" %>
+<%@ attribute name="numbers" required="true" %>
+
+<%
+String[] arr = numbers.split(",");
+int[] nums = new int[arr.length];
+
+// Convert to int
+for (int i = 0; i < arr.length; i++) {
+nums[i] = Integer.parseInt(arr[i].trim());
+}
+
+// Sorting (Ascending)
+for (int i = 0; i < nums.length; i++) {
+for (int j = i + 1; j < nums.length; j++) {
+if (nums[i] > nums[j]) {
+int temp = nums[i];
+nums[i] = nums[j];
+nums[j] = temp;
+}
+}
+}
+%>
+
+<h3>Sorted Numbers:</h3>
+
+<%
+for (int n : nums) {
+out.print(n + " ");
+}
+%>
+
+
+
+───
+
+ 2. index.jsp
+
+<%@ page contentType="text/html" %>
+<%@ taglib prefix="st" tagdir="/WEB-INF/tags" %>
+
+<html>
+<body>
+
+<h2>Sort Numbers (Custom Tag)</h2>
+
+<form method="post">
+Enter numbers (comma separated):
+<input type="text" name="nums" size="40" required>
+<br><br>
+<input type="submit" value="Sort">
+</form>
+
+<%
+String numbers = request.getParameter("nums");
+if (numbers != null) {
+%>
+<st:sort numbers="<%=numbers%>" />
+<%
+}
+%>
+
+</body>
+</html>
+
+───
+
+
+
+
+───
+
+ PRACTICAL 10 – Application Context + Listener (User Limit)
+
+
+
+───
+
+ Project Structure
+
+Practical_10/
+│── src/
+│ └── listener/
+│ └── UserListener.java
+│
+│── WebContent/
+│ ├── index.jsp
+│ ├── error.jsp
+│ └── WEB-INF/
+│ └── web.xml
+
+ Matches your file (listener + application context)
+
+
+
+───
+
+ 1. error.jsp
+
+<html>
+<body>
+<h1 style="color:red;">
+Maximum 3 Users Allowed! Please try again later.
+</h1>
+</body>
+</html>
+
+
+
+───
+
+ 2. index.jsp
+
+<%
+Integer users = (Integer) application.getAttribute("users");
+
+if (users != null && users > 3) {
+response.sendRedirect("error.jsp");
+return;
+}
+%>
+
+<html>
+<body>
+
+<h2>Welcome User!</h2>
+<h3>Active Users: <%= users %></h3>
+
+</body>
+</html>
+
+
+
+───
+
+ 3. UserListener.java
+
+package listener;
+
+import javax.servlet.;
+import javax.servlet.http.;
+
+public class UserListener implements HttpSessionListener {
+
+public void sessionCreated(HttpSessionEvent se) {
+
+ServletContext context = se.getSession().getServletContext();
+
+Integer count = (Integer) context.getAttribute("users");
+
+if (count == null) count = 0;
+
+count++;
+
+context.setAttribute("users", count);
+
+System.out.println("User Entered: " + count);
+}
+
+public void sessionDestroyed(HttpSessionEvent se) {
+
+ServletContext context = se.getSession().getServletContext();
+
+Integer count = (Integer) context.getAttribute("users");
+
+if (count == null) count = 0;
+
+count--;
+
+context.setAttribute("users", count);
+
+System.out.println("User Left: " + count);
+}
+}
+
+
+ 4. web.xml
+
+<web-app version="3.1">
+
+<listener>
+<listener-class>listener.UserListener</listener-class>
+</listener>
+
+<welcome-file-list>
+<welcome-file>index.jsp</welcome-file>
+</welcome-file-list>
+
+</web-app>
+

@@ -1,0 +1,835 @@
+#  PRACTICAL 1 – JDBC Database Connectivity
+---
+## Project Structure
+
+Practical_1/
+│── src/
+│   └── practical_1/
+│       └── Practical_1.java
+│
+│── lib/
+│   └── mysql-connector-j.jar
+
+##  Full Code – Practical_1.java
+
+package practical_1;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
+public class Practical_1 {
+
+    public static void main(String[] args) {
+
+        Connection con = null;
+
+        try {
+            // Step 1: Load JDBC Driver
+            Class.forName("com.mysql.cj.jdbc.Driver");
+
+            // Step 2: Database URL
+            String url = "jdbc:mysql://localhost:3307/college";
+            String user = "root";
+            String password = ""; // XAMPP default
+
+            // Step 3: Create Connection
+            con = DriverManager.getConnection(url, user, password);
+
+            // Step 4: Success Message
+            System.out.println("Database Connected Successfully!");
+
+        } catch (ClassNotFoundException e) {
+            System.out.println("Error: JDBC Driver not found");
+        } catch (SQLException e) {
+            System.out.println("Error: Database connection failed");
+            System.out.println("Reason: " + e.getMessage());
+        } finally {
+            try {
+                if (con != null) {
+                    con.close();
+                }
+            } catch (SQLException e) {
+                System.out.println("Error while closing connection");
+            }
+        }
+    }
+}
+
+//2. Create DB:
+
+sql
+CREATE DATABASE college;
+
+3. Add **mysql-connector-j.jar**
+#  PRACTICAL 2 – JDBC CRUD (Menu Driven)
+##  Project Structure
+Practical_2/
+│── src/
+│   └── practical_2/
+│       └── Practical_2.java
+│
+│── lib/
+│   └── mysql-connector-j.jar
+
+#  Database Setup
+
+CREATE DATABASE jdbc_demo;
+
+USE jdbc_demo;
+
+CREATE TABLE student (
+    student_id INT PRIMARY KEY,
+    name VARCHAR(50),
+    course VARCHAR(50),
+    marks INT
+);
+```
+#  Full Code – Practical_2.java
+
+
+package practical_2;
+
+import java.sql.*;
+import java.util.Scanner;
+
+public class Practical_2 {
+
+    public static void main(String[] args) {
+
+        try {
+            // Load Driver
+            Class.forName("com.mysql.cj.jdbc.Driver");
+
+            // Create Connection
+            Connection con = DriverManager.getConnection(
+                "jdbc:mysql://localhost:3307/jdbc_demo", "root", ""
+            );
+
+            Statement stmt = con.createStatement();
+            Scanner sc = new Scanner(System.in);
+
+            int choice;
+
+            do {
+                System.out.println("\n----- STUDENT MENU -----");
+                System.out.println("1. Insert Student");
+                System.out.println("2. Display Students");
+                System.out.println("3. Update Student");
+                System.out.println("4. Delete Student");
+                System.out.println("5. Exit");
+                System.out.print("Enter your choice: ");
+
+                choice = sc.nextInt();
+                sc.nextLine();
+
+                switch (choice) {
+
+                    // INSERT
+                    case 1:
+                        System.out.print("Enter Student ID: ");
+                        int id = sc.nextInt();
+                        sc.nextLine();
+
+                        System.out.print("Enter Name: ");
+                        String name = sc.nextLine();
+
+                        System.out.print("Enter Course: ");
+                        String course = sc.nextLine();
+
+                        System.out.print("Enter Marks: ");
+                        int marks = sc.nextInt();
+
+                        String insert = "INSERT INTO student VALUES (" +
+                                id + ",'" + name + "','" + course + "'," + marks + ")";
+                        stmt.executeUpdate(insert);
+
+                        System.out.println("Student record inserted successfully");
+                        break;
+
+                    // DISPLAY
+                    case 2:
+                        ResultSet rs = stmt.executeQuery("SELECT * FROM student");
+
+                        System.out.println("\nStudent Records:");
+                        while (rs.next()) {
+                            System.out.println(
+                                    rs.getInt("student_id") + " " +
+                                    rs.getString("name") + " " +
+                                    rs.getString("course") + " " +
+                                    rs.getInt("marks")
+                            );
+                        }
+                        break;
+
+                    // UPDATE
+                    case 3:
+                        System.out.print("Enter Student ID to update: ");
+                        int uid = sc.nextInt();
+                        sc.nextLine();
+
+                        System.out.print("Enter New Course: ");
+                        String newCourse = sc.nextLine();
+
+                        System.out.print("Enter New Marks: ");
+                        int newMarks = sc.nextInt();
+
+                        String update = "UPDATE student SET course='" + newCourse +
+                                "', marks=" + newMarks +
+                                " WHERE student_id=" + uid;
+
+                        int rowsUpdated = stmt.executeUpdate(update);
+
+                        if (rowsUpdated > 0)
+                            System.out.println("Student record updated successfully");
+                        else
+                            System.out.println("Student ID not found");
+                        break;
+
+                    // DELETE
+                    case 4:
+                        System.out.print("Enter Student ID to delete: ");
+                        int did = sc.nextInt();
+
+                        String delete = "DELETE FROM student WHERE student_id=" + did;
+
+                        int rowsDeleted = stmt.executeUpdate(delete);
+
+                        if (rowsDeleted > 0)
+                            System.out.println("Student record deleted successfully");
+                        else
+                            System.out.println("Student ID not found");
+                        break;
+
+                    case 5:
+                        System.out.println("Exiting program...");
+                        break;
+
+                    default:
+                        System.out.println("Invalid choice");
+                }
+
+            } while (choice != 5);
+
+            con.close();
+
+        } catch (ClassNotFoundException e) {
+            System.out.println("JDBC Driver not found");
+        } catch (SQLException e) {
+            System.out.println("SQL Error: " + e.getMessage());
+        }
+    }
+}
+```
+---
+Good—now we move to **Practical 3 (GUI + Database Integration)**. This one is important because it mixes **Swing + JDBC + multi-screen flow**.
+
+---
+
+#  PRACTICAL 3 – Data Driven GUI Application
+
+---
+
+##  Project Structure
+
+
+Practical_3/
+│── src/
+│   ├── db/
+│   │   └── DB.java
+│   │
+│   └── gui/
+│       ├── Register.java
+│       └── ViewData.java
+│
+│── lib/
+│   └── mysql-connector-j.jar
+```
+
+📌 Matches your file (DB + GUI classes) 
+
+---
+
+#  Database Setup
+
+
+CREATE DATABASE practical3_db;
+
+USE practical3_db;
+
+CREATE TABLE user (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50),
+    email_id VARCHAR(50),
+    phone_number VARCHAR(15)
+);
+```
+
+---
+
+# 1. DB.java (Connection Class)
+
+
+package db;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
+public class DB {
+
+    public static Connection getCon() {
+        Connection con = null;
+
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+
+            con = DriverManager.getConnection(
+                "jdbc:mysql://localhost:3306/practical3_db",
+                "root",
+                ""
+            );
+
+            System.out.println("Database Connected Successfully");
+
+        } catch (ClassNotFoundException e) {
+            System.out.println("MySQL Driver Not Found");
+        } catch (SQLException e) {
+            System.out.println("Database Connection Failed");
+        }
+
+        return con;
+    }
+}
+```
+
+---
+
+#  2. Register.java (Form + Insert)
+
+
+package gui;
+
+import db.DB;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import javax.swing.*;
+import java.awt.event.*;
+
+public class Register extends JFrame {
+
+    JTextField txtName, txtEmail, txtPhone;
+    JButton btnSave;
+
+    public Register() {
+
+        setTitle("Registration Form");
+        setSize(350, 250);
+        setLayout(null);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        JLabel l1 = new JLabel("Name:");
+        l1.setBounds(30, 30, 100, 25);
+        add(l1);
+
+        txtName = new JTextField();
+        txtName.setBounds(120, 30, 150, 25);
+        add(txtName);
+
+        JLabel l2 = new JLabel("Email:");
+        l2.setBounds(30, 70, 100, 25);
+        add(l2);
+
+        txtEmail = new JTextField();
+        txtEmail.setBounds(120, 70, 150, 25);
+        add(txtEmail);
+
+        JLabel l3 = new JLabel("Phone:");
+        l3.setBounds(30, 110, 100, 25);
+        add(l3);
+
+        txtPhone = new JTextField();
+        txtPhone.setBounds(120, 110, 150, 25);
+        add(txtPhone);
+
+        btnSave = new JButton("Save");
+        btnSave.setBounds(120, 160, 80, 30);
+        add(btnSave);
+
+        btnSave.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                saveData();
+            }
+        });
+
+        setVisible(true);
+    }
+
+    void saveData() {
+
+        Connection con = DB.getCon();
+
+        if (con == null) {
+            JOptionPane.showMessageDialog(this, "Database Not Connected");
+            return;
+        }
+
+        try {
+            String sql = "INSERT INTO user(name, email_id, phone_number) VALUES(?,?,?)";
+
+            PreparedStatement ps = con.prepareStatement(sql);
+
+            ps.setString(1, txtName.getText());
+            ps.setString(2, txtEmail.getText());
+            ps.setString(3, txtPhone.getText());
+
+            ps.executeUpdate();
+
+            JOptionPane.showMessageDialog(this, "Data Saved Successfully");
+
+            new ViewData(); // Move to next screen
+            this.dispose();
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Insert Operation Failed");
+        }
+    }
+
+    public static void main(String[] args) {
+        new Register();
+    }
+}
+```
+
+---
+
+#  3. ViewData.java (Display Data)
+
+package gui;
+
+import db.DB;
+import java.sql.*;
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+
+public class ViewData extends JFrame {
+
+    JTable table;
+
+    public ViewData() {
+
+        setTitle("User Data");
+        setSize(500, 300);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        table = new JTable();
+        DefaultTableModel model = new DefaultTableModel();
+
+        model.addColumn("ID");
+        model.addColumn("Name");
+        model.addColumn("Email");
+        model.addColumn("Phone");
+
+        table.setModel(model);
+
+        Connection con = DB.getCon();
+
+        if (con == null) {
+            JOptionPane.showMessageDialog(this, "Database Not Connected");
+            return;
+        }
+
+        try {
+            Statement st = con.createStatement();
+            ResultSet rs = st.executeQuery("SELECT * FROM user");
+
+            while (rs.next()) {
+                model.addRow(new Object[]{
+                    rs.getInt("id"),
+                    rs.getString("name"),
+                    rs.getString("email_id"),
+                    rs.getString("phone_number")
+                });
+            }
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Data Fetch Failed");
+        }
+
+        add(new JScrollPane(table));
+        setVisible(true);
+    }
+}
+```
+
+---
+
+ PRACTICAL 4 – Data Driven Servlet Authentication
+───
+
+ Project Structure
+
+Practical_4/
+│── src/
+│ └── com/example/
+│ └── LoginServlet.java
+│
+│── WebContent/ (or webapp/)
+│ ├── index.html
+│ └── WEB-INF/
+│
+│── lib/
+│ └── mysql--connectorj.jar
+
+ Structure matches your file
+
+───
+
+ Database Setup
+
+CREATE DATABASE practical_4;
+
+USE practical_4;
+
+CREATE TABLE user (
+id INT AUTO_INCREMENT PRIMARY KEY,
+username VARCHAR(50),
+password VARCHAR(50)
+);
+
+INSERT INTO user (username, password)
+VALUES ('admin', '123');
+
+
+
+───
+
+1. index.html (Login Page)
+
+<!DOCTYPE html>
+<html>
+<head>
+<title>User Login</title>
+</head>
+<body>
+
+<h2>User Authentication - Practical 4</h2>
+
+<form action="LoginServlet" method="post">
+Username: <input type="text" name="username"><br><br>
+Password: <input type="password" name="password"><br><br>
+<input type="submit" value="Login">
+</form>
+
+</body>
+</html>
+
+───
+
+ 2. LoginServlet.java
+
+package com.example;
+
+import java.io.;
+import java.sql.;
+import java.util.Enumeration;
+import javax.servlet.;
+import javax.servlet.http.;
+import javax.servlet.annotation.WebServlet;
+
+@WebServlet("/LoginServlet")
+public class LoginServlet extends HttpServlet {
+
+protected void doPost(HttpServletRequest request, HttpServletResponse response)
+throws ServletException, IOException {
+
+response.setContentType("text/html");
+PrintWriter out = response.getWriter();
+
+String username = request.getParameter("username");
+String password = request.getParameter("password");
+
+try {
+// Load Driver
+Class.forName("com.mysql.cj.jdbc.Driver");
+
+// Connection
+Connection con = DriverManager.getConnection(
+"jdbc:mysql://localhost:3306/practical_4", "root", ""
+);
+
+// Query
+PreparedStatement ps = con.prepareStatement(
+"SELECT * FROM user WHERE username=? AND password=?"
+);
+
+ps.setString(1, username);
+ps.setString(2, password);
+
+ResultSet rs = ps.executeQuery();
+
+// Authentication
+if (rs.next()) {
+out.println("<h2>Login Successful</h2>");
+} else {
+out.println("<h2>Invalid Username or Password</h2>");
+}
+
+// 🔹 Request Headers
+out.println("<h3>Request Header Values</h3>");
+Enumeration<String> reqHeaders = request.getHeaderNames();
+
+while (reqHeaders.hasMoreElements()) {
+String h = reqHeaders.nextElement();
+out.println(h + " : " + request.getHeader(h) + "<br>");
+}
+
+// 🔹 Response Headers
+out.println("<h3>Response Header Values</h3>");
+response.setHeader("Application", "Practical_4");
+
+for (String h : response.getHeaderNames()) {
+out.println(h + " : " + response.getHeader(h) + "<br>");
+}
+
+// Close
+rs.close();
+ps.close();
+con.close();
+
+} catch (Exception e) {
+out.println("Error: " + e);
+}
+}
+}
+
+PRACTICAL 5 – Student Grading System (Servlet + Session)
+
+───
+
+ Project Structure
+
+Practical_5/
+│── src/
+│ └── com/example/
+│ ├── StudentServlet.java
+│ └── MarksServlet.java
+│
+│── WebContent/
+│ ├── index.html
+│ └── WEB-INF/
+
+ Matches your file (multi-servlet + session flow)
+
+
+
+───
+
+ 1. index.html (Student Details Form)
+
+<!DOCTYPE html>
+<html>
+<head>
+<title>Student Details</title>
+</head>
+<body>
+
+<h2>Student Information</h2>
+
+<form action="StudentServlet" method="post">
+Name: <input type="text" name="name"><br><br>
+ID: <input type="text" name="id"><br><br>
+Department: <input type="text" name="dept"><br><br>
+<input type="submit" value="Next">
+</form>
+
+</body>
+</html>
+
+
+
+───
+
+ 2. StudentServlet.java (Store Data in Session)
+
+package com.example;
+
+import java.io.;
+import javax.servlet.;
+import javax.servlet.http.*;
+import javax.servlet.annotation.WebServlet;
+
+@WebServlet("/StudentServlet")
+public class StudentServlet extends HttpServlet {
+
+protected void doPost(HttpServletRequest request, HttpServletResponse response)
+throws ServletException, IOException {
+
+response.setContentType("text/html");
+PrintWriter out = response.getWriter();
+
+String name = request.getParameter("name");
+String id = request.getParameter("id");
+String dept = request.getParameter("dept");
+
+//  Create Session
+HttpSession session = request.getSession();
+
+session.setAttribute("name", name);
+session.setAttribute("id", id);
+session.setAttribute("dept", dept);
+
+//  Next Page (Marks Form)
+out.println("<h3>Welcome, " + name + "</h3>");
+out.println("<form action='MarksServlet' method='post'>");
+
+for (int i = 1; i <= 6; i++) {
+out.println("Subject " + i + ": <input type='number' name='m" + i + "'><br><br>");
+}
+
+out.println("<input type='submit' value='Generate Result'>");
+out.println("</form>");
+}
+}
+
+
+
+───
+
+ 3. MarksServlet.java (Result + Pass/Fail)
+
+package com.example;
+
+import java.io.;
+import javax.servlet.;
+import javax.servlet.http.*;
+import javax.servlet.annotation.WebServlet;
+
+@WebServlet("/MarksServlet")
+public class MarksServlet extends HttpServlet {
+
+protected void doPost(HttpServletRequest request, HttpServletResponse response)
+throws ServletException, IOException {
+
+response.setContentType("text/html");
+PrintWriter out = response.getWriter();
+
+HttpSession session = request.getSession();
+
+//  Get Session Data
+String name = (String) session.getAttribute("name");
+String id = (String) session.getAttribute("id");
+String dept = (String) session.getAttribute("dept");
+
+//  Get Marks
+int m1 = Integer.parseInt(request.getParameter("m1"));
+int m2 = Integer.parseInt(request.getParameter("m2"));
+int m3 = Integer.parseInt(request.getParameter("m3"));
+int m4 = Integer.parseInt(request.getParameter("m4"));
+int m5 = Integer.parseInt(request.getParameter("m5"));
+int m6 = Integer.parseInt(request.getParameter("m6"));
+
+//  Pass Condition
+boolean pass = m1 >= 35 && m2 >= 35 && m3 >= 35 &&
+m4 >= 35 && m5 >= 35 && m6 >= 35;
+
+//  Output
+out.println("<h2>Result</h2>");
+out.println("<h3>Student Name: " + name + "</h3>");
+out.println("ID: " + id + "<br>");
+out.println("Department: " + dept + "<br><br>");
+
+if (pass) {
+out.println("<h2 style='color:green'>PASS</h2>");
+} else {
+out.println("<h2 style='color:red'>FAIL</h2>");
+}
+
+//  End Session
+session.invalidate();
+}
+}
+
+
+
+
+
+───
+
+ PRACTICAL 6 – Request Redirection (Servlet)
+
+───
+
+ Project Structure
+
+Practical_6/
+│── src/
+│ └── com/example/
+│ └── RedirectServlet.java
+│
+│── WebContent/
+│ ├── index.html
+│ └── WEB-INF/
+
+ Matches your file structure
+
+
+
+───
+
+ 1. index.html (Input URL)
+
+<!DOCTYPE html>
+<html>
+<head>
+<title>Request Redirection</title>
+</head>
+<body>
+
+<h2>Servlet Request Redirection</h2>
+
+<form action="RedirectServlet" method="post">
+Enter URL:
+<input type="text" name="location" placeholder="https://www.google.com">
+<br><br>
+<input type="submit" value="Go">
+</form>
+
+</body>
+</html>
+
+
+
+───
+
+ 2. RedirectServlet.java
+
+package com.example;
+
+import java.io.;
+import javax.servlet.;
+import javax.servlet.http.*;
+import javax.servlet.annotation.WebServlet;
+
+@WebServlet("/RedirectServlet")
+public class RedirectServlet extends HttpServlet {
+
+protected void doPost(HttpServletRequest request, HttpServletResponse response)
+throws ServletException, IOException {
+
+String url = request.getParameter("location");
+
+if (url != null && !url.isEmpty()) {
+
+//  Redirect to given URL
+response.sendRedirect(url);
+
+} else {
+response.setContentType("text/html");
+PrintWriter out = response.getWriter();
+out.println("<h3>Please enter a valid URL</h3>");
+}
+}
+}
+
