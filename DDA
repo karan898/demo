@@ -1,0 +1,54 @@
+// LIBRARY TO ADD IN CODEBLOCKS
+// freeglut
+// opengl32
+// glu32
+
+// PRACTICAL-1
+// DDA LINE DRAWING ALGO.
+
+#include <GL/glut.h>
+#include <math.h>
+
+void drawDDA(int x1, int y1, int x2, int y2) {
+float dx = x2 - x1;
+float dy = y2 - y1;
+float steps = (fabs(dx) > fabs(dy)) ? fabs(dx) : fabs(dy);
+
+float Xinc = dx / steps;
+float Yinc = dy / steps;
+
+float x = x1, y = y1;
+
+glBegin(GL_POINTS);
+for (int i = 0; i < (int)steps; i++) {
+glVertex2i(round(x), round(y));
+x += Xinc;
+y += Yinc;
+}
+glEnd();
+glFlush();
+}
+
+void display() {
+glClear(GL_COLOR_BUFFER_BIT);
+
+drawDDA(50, 100, 300, 250);
+}
+
+void init() {
+glClearColor(0.0, 0.0, 0.0, 1.0);
+glMatrixMode(GL_PROJECTION);
+gluOrtho2D(0, 500, 0, 500);
+}
+int main(int argc, char** argv) {
+glutInit(&argc, argv);
+glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
+glutInitWindowSize(500, 500);
+glutInitWindowPosition(100, 100);
+glutCreateWindow("DDA Line Drawing Algorithm");
+
+init();
+glutDisplayFunc(display);
+glutMainLoop();
+return 0;
+}

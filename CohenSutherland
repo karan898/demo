@@ -1,0 +1,117 @@
+#include <GL/glut.h>
+#include <stdio.h>
+// Clipping window boundaries
+float xmin = 100, ymin = 100, xmax = 300, ymax = 300;
+// Line endpoints
+float x1 = 50, y1 = 50, x2 = 350, y2 = 350;
+// Region codes
+#define INSIDE 0 // 0000
+#define LEFT 1 // 0001
+#define RIGHT 2 // 0010
+#define BOTTOM 4 // 0100
+#define TOP 8 // 1000
+// Function to compute region code
+int computeCode(float x, float y) {
+int code = INSIDE;
+if (x < xmin)
+code |= LEFT;
+else if (x > xmax)
+code |= RIGHT;
+if (y < ymin)
+code |= BOTTOM;
+else if (y > ymax)
+code |= TOP;
+return code;
+}
+// Cohen-Sutherland clipping algorithm
+void cohenSutherlandClip() {
+float x, y;
+int code1 = computeCode(x1, y1);
+int code2 = computeCode(x2, y2);
+int accept = 0;
+while (1) {
+if ((code1 == 0) && (code2 == 0)) {
+// Both endpoints inside
+accept = 1;
+break;
+} else if (code1 & code2) {
+// Both endpoints share an outside region
+break;
+} else {
+int code_out;
+if (code1 != 0)
+code_out = code1;
+else
+code_out = code2;
+// Find intersection
+if (code_out & TOP) {
+x = x1 + (x2 - x1) * (ymax - y1) / (y2 - y1);
+y = ymax;
+} else if (code_out & BOTTOM) {
+x = x1 + (x2 - x1) * (ymin - y1) / (y2 - y1);
+y = ymin;
+} else if (code_out & RIGHT) {
+y = y1 + (y2 - y1) * (xmax - x1) / (x2 - x1);
+x = xmax;
+} else if (code_out & LEFT) {
+y = y1 + (y2 - y1) * (xmin - x1) / (x2 - x1);
+x = xmin;
+}
+// Replace outside point
+if (code_out == code1) {
+x1 = x;
+y1 = y;
+code1 = computeCode(x1, y1);
+} else {
+x2 = x;
+y2 = y;
+code2 = computeCode(x2, y2);
+}
+}
+}
+// Draw clipped line if accepted
+if (accept) {
+glColor3f(0.0, 1.0, 0.0); // Green
+glBegin(GL_LINES);
+glVertex2f(x1, y1);
+glVertex2f(x2, y2);
+glEnd();
+}
+}
+// Display function
+void display() {
+glClear(GL_COLOR_BUFFER_BIT);
+// Draw clipping window
+glColor3f(1.0, 1.0, 1.0); // White
+glBegin(GL_LINE_LOOP);
+glVertex2f(xmin, ymin);
+glVertex2f(xmax, ymin);
+glVertex2f(xmax, ymax);
+glVertex2f(xmin, ymax);
+glEnd();
+// Draw original line (Red)
+glColor3f(1.0, 0.0, 0.0);
+glBegin(GL_LINES);
+glVertex2f(50, 50);
+glVertex2f(350, 350);
+glEnd();
+// Apply clipping
+cohenSutherlandClip();
+glFlush();
+}
+// Initialization
+void init() {
+glClearColor(0.0, 0.0, 0.0, 1.0);
+gluOrtho2D(0, 400, 0, 400);
+}
+// Main function
+int main(int argc, char** argv) {
+glutInit(&argc, argv);
+glutInitWindowSize(500, 500);
+glutInitWindowPosition(100, 100);
+glutCreateWindow("Cohen-Sutherland Line Clipping");
+init();
+glutDisplayFunc(display);
+glutMainLoop();
+return 0;
+}

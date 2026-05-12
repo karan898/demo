@@ -1,0 +1,108 @@
+// PRACTICAL-5
+// MID-POINT ELIPSE ALGO.
+
+#include <GL/glut.h>
+#include <stdio.h>
+#include <math.h>
+
+int rx, ry, xc=0, yc=0;
+
+void plotPoints(int x, int y)
+{
+glBegin(GL_POINTS);
+glVertex2i(xc + x, yc + y);
+glVertex2i(xc - x, yc + y);
+glVertex2i(xc + x, yc - y);
+glVertex2i(xc - x, yc - y);
+glEnd();
+}
+
+void midpointEllipse()
+{
+float dx, dy, d1, d2, x, y;
+x = 0;
+y = ry;
+
+d1 = (ry * ry) - (rx * rx * ry) + (0.25 * rx * rx);
+dx = 2 * ry * ry * x;
+dy = 2 * rx * rx * y;
+
+while (dx < dy)
+{
+plotPoints(x, y);
+
+if (d1 < 0)
+{
+x++;
+dx = dx + (2 * ry * ry);
+d1 = d1 + dx + (ry * ry);
+}
+else
+{
+x++;
+y--;
+dx = dx + (2 * ry * ry);
+dy = dy - (2 * rx * rx);
+d1 = d1 + dx - dy + (ry * ry);
+}
+}
+
+d2 = ((ry * ry) * ((x + 0.5) * (x + 0.5))) +
+((rx * rx) * ((y - 1) * (y - 1))) -
+(rx * rx * ry * ry);
+
+while (y >= 0)
+{
+plotPoints(x, y);
+
+if (d2 > 0)
+{
+y--;
+dy = dy - (2 * rx * rx);
+d2 = d2 + (rx * rx) - dy;
+}
+else
+{
+y--;
+x++;
+dx = dx + (2 * ry * ry);
+dy = dy - (2 * rx * rx);
+d2 = d2 + dx - dy + (rx * rx);
+}
+}
+}
+
+void display()
+{
+glClear(GL_COLOR_BUFFER_BIT);
+glColor3f(1.0, 1.0, 1.0);
+midpointEllipse();
+glFlush();
+}
+
+void init()
+{
+glClearColor(0.0, 0.0, 0.0, 1.0);
+gluOrtho2D(-500, 500, -500, 500);
+
+}
+
+int main(int argc, char** argv)
+{
+printf("Enter rx: ");
+scanf("%d", &rx);
+printf("Enter ry: ");
+scanf("%d", &ry);
+system("cls");
+glutInit(&argc, argv);
+glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
+glutInitWindowSize(800, 800);
+glutInitWindowPosition(100, 100);
+glutCreateWindow("Midpoint Ellipse Algorithm - OpenGL");
+
+init();
+glutDisplayFunc(display);
+glutMainLoop();
+
+return 0;
+}
