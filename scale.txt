@@ -1,0 +1,54 @@
+export PROJECT_ID=$(gcloud config get-value project)
+export REGION=us-west1
+export CLUSTER=cc2-hello-cluster
+export REPO=cc2-repo
+export APP=hello-app
+
+gcloud services enable container.googleapis.com artifactregistry.googleapis.com compute.googleapis.com
+
+gcloud container clusters create-auto $CLUSTER --region=$REGION
+
+gcloud container clusters get-credentials $CLUSTER --region=$REGION
+
+kubectl get nodes
+
+gcloud artifacts repositories create $REPO \
+  --repository-format=docker \
+  --location=$REGION
+
+gcloud auth configure-docker ${REGION}-docker.pkg.dev --quiet
+
+mkdir -p ~/cc2-gke
+cd ~/cc2-gke
+
+cat > Dockerfile <<'EOF'
+FROM nginx:alpine
+RUN echo "<h1>CC-II Practical 4 — GKE v1</h1>" > /usr/share/nginx/html/index.html
+EXPOSE 80
+EOF
+
+export IMAGE=${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPO}/${APP}:v1
+
+docker build -t $IMAGE .
+
+docker push $IMAGE
+
+kubectl create deployment $APP --image=$IMAGE
+
+kubectl get deployments
+
+kubectl get pods
+
+kubectl scale deployment $APP --replicas=3
+
+kubectl get pods
+
+kubectl expose deployment $APP \
+  --name=${APP}-svc \
+  --type=LoadBalancer \
+  --port=80 \
+  --target-port=80
+
+kubectl get service ${APP}-svc
+
+curl http://34.168.46.128/
