@@ -1,0 +1,35 @@
+export PROJECT_ID=$(gcloud config get-value project)
+export ZONE=europe-west4-a
+
+gcloud compute instances create cc2-docker-vm
+--zone=$ZONE
+--machine-type=e2-medium
+--image-family=debian-12
+--image-project=debian-cloud
+--tags=http-server
+--scopes=https://www.googleapis.com/auth/cloud-platform
+
+gcloud compute firewall-rules create allow-http-cc2-p02
+--allow=tcp:80
+--target-tags=http-server
+--description="CC2 P02 HTTP" || true
+
+gcloud compute ssh cc2-docker-vm --zone=$ZONE
+
+sudo apt-get update -y
+sudo apt-get install -y docker.io
+sudo systemctl enable docker
+sudo systemctl start docker
+sudo usermod -aG docker $USER
+exit
+
+gcloud compute ssh cc2-docker-vm --zone=$ZONE
+
+docker version
+docker run hello-world
+docker pull nginx:alpine
+docker run -d --name cc2-web -p 80:80 nginx:alpine
+docker ps
+curl -I http://127.0.0.1/
+docker exec cc2-web sh -c 'echo "<h1>CC-II Practical 2 — Docker on GCE</h1>" > /usr/share/nginx/html/index.html'
+curl http://127.0.0.1/
