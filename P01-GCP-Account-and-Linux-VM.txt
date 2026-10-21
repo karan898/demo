@@ -1,0 +1,37 @@
+4. PART B — ENABLE COMPUTE API & CREATE VM
+
+  gcloud services enable compute.googleapis.com
+
+  gcloud compute instances create cc2-vm-1 \
+    --zone=asia-south1-a \
+    --machine-type=e2-micro \
+    --image-family=debian-12 \
+    --image-project=debian-cloud \
+    --tags=http-server,https-server \
+    --metadata=startup-script='#!/bin/bash
+      apt-get update -y
+      apt-get install -y nginx
+      echo "<h1>CC-II Practical 1 — Linux VM</h1>" > /var/www/html/index.html
+      systemctl enable nginx
+      systemctl restart nginx'
+
+  gcloud compute instances list
+  gcloud compute instances describe cc2-vm-1 --zone=asia-south1-a
+
+5. PART C — FIREWALL & ACCESS
+
+  # Allow HTTP (if not already present for http-server tag)
+  gcloud compute firewall-rules create allow-http-cc2 \
+    --allow=tcp:80 \
+    --target-tags=http-server \
+    --description="CC2 P01 HTTP"
+
+  # SSH
+  gcloud compute ssh cc2-vm-1 --zone=asia-south1-a
+
+  # Inside VM:
+  hostname
+  cat /etc/os-release
+  systemctl status nginx --no-pager
+  curl -I http://127.0.0.1/
+  exit
